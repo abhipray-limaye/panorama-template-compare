@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panorama Template Comparator</title>
+<style>
+/* reset */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0f1117;color:#e2e8f0;min-height:100vh;font-size:14px}
+
+/* topbar */
+.topbar{background:#1a1f2e;border-bottom:3px solid #cc0000;padding:0 32px;height:52px;display:flex;align-items:center;gap:16px;position:sticky;top:0;z-index:100}
+.tb-brand{font-weight:700;font-size:15px;color:#fff;letter-spacing:.02em}
+.tb-brand span{color:#cc0000}
+.tb-div{width:1px;height:26px;background:#2d3448}
+.tb-title{font-size:13px;color:#94a3b8}
+.tb-badge{margin-left:auto;background:#1e3a2e;border:1px solid #22543d;color:#48bb78;font-size:11px;font-weight:700;padding:3px 10px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase}
+
+/* layout */
+.page{max-width:1500px;margin:0 auto;padding:24px 28px}
+
+/* upload grid – 3 columns */
+.upload-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:22px}
+@media(max-width:1000px){.upload-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){.upload-grid{grid-template-columns:1fr}}
+
+.upload-card{background:#1a1f2e;border:1px solid #2d3448;border-radius:8px;overflow:hidden}
+/* T3 dashed until loaded */
+.upload-card.opt{border-style:dashed}
+.upload-card.opt.loaded{border-style:solid}
+
+.uc-head{padding:11px 16px;display:flex;align-items:center;gap:9px;border-bottom:1px solid #2d3448;font-weight:600;font-size:13px}
+.uc-head.t1{background:rgba(204,0,0,.15);border-left:3px solid #cc0000}
+.uc-head.t2{background:rgba(99,102,241,.15);border-left:3px solid #6366f1}
+.uc-head.t3{background:rgba(202,138,4,.1);border-left:3px solid #ca8a04}
+.bdg{font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:.05em;text-transform:uppercase;color:#fff}
+.bdg-1{background:#cc0000}.bdg-2{background:#6366f1}.bdg-3{background:#92400e}
+.tag-req{font-size:10px;font-weight:600;color:#f87171;margin-left:auto}
+.tag-opt{font-size:10px;color:#475569;margin-left:auto;font-style:italic}
+
+.uc-body{padding:14px 16px}
+.name-input{width:100%;background:#0f1117;border:1px solid #2d3448;color:#e2e8f0;font-size:12px;font-family:'Segoe UI',sans-serif;padding:7px 11px;border-radius:5px;outline:none;margin-bottom:10px;transition:border-color .15s}
+.name-input:focus{border-color:#6366f1}
+.name-input::placeholder{color:#475569}
+
+.drop-zone{border:2px dashed #2d3448;border-radius:6px;padding:22px 14px;text-align:center;cursor:pointer;transition:all .18s;position:relative;background:#0f1117}
+.drop-zone:hover,.drop-zone.over{border-color:#6366f1;background:#13162a}
+.drop-zone.ld1{border-color:#cc0000;border-style:solid;background:#1a0808}
+.drop-zone.ld2{border-color:#6366f1;border-style:solid;background:#0e0f22}
+.drop-zone.ld3{border-color:#ca8a04;border-style:solid;background:#1a1200}
+.drop-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.dz-icon{font-size:28px;margin-bottom:6px;opacity:.45}
+.dz-text{font-size:12px;color:#64748b;line-height:1.5}
+.dz-hint{font-size:10px;color:#374151;margin-top:4px;font-family:'Courier New',monospace}
+
+.clr{position:absolute;top:6px;right:7px;background:#374151;border:none;color:#94a3b8;width:20px;height:20px;border-radius:50%;font-size:13px;cursor:pointer;z-index:2;display:none;align-items:center;justify-content:center;line-height:1;padding:0}
+.clr:hover{background:#cc0000;color:#fff}
+.clr.show{display:flex}
+
+.file-ok{display:flex;align-items:center;gap:9px;margin-top:9px;padding:8px 11px;border-radius:5px;background:#0d1f15;border:1px solid #1a4731}
+.file-ok-icon{color:#4ade80;font-size:16px;flex-shrink:0}
+.fn{font-family:'Courier New',monospace;font-size:11px;color:#4ade80;font-weight:600;word-break:break-all}
+.fm{font-size:10px;color:#475569;margin-top:2px}
+
+/* action bar */
+.action-bar{display:flex;align-items:center;gap:12px;margin-bottom:22px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:5px;border:none;font-family:'Segoe UI',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none!important}
+.btn-run{background:#cc0000;color:#fff}.btn-run:hover:not(:disabled){background:#aa0000;transform:translateY(-1px)}
+.btn-csv{background:#166534;color:#fff}.btn-csv:hover:not(:disabled){background:#14532d;transform:translateY(-1px)}
+.btn-xl{background:#1e3a8a;color:#fff}.btn-xl:hover:not(:disabled){background:#1c3278;transform:translateY(-1px)}
+.btn-reset{background:#1a1f2e;border:1px solid #2d3448;color:#94a3b8}.btn-reset:hover{border-color:#6366f1;color:#a5b4fc}
+.status-txt{font-size:12px;color:#475569;font-family:'Courier New',monospace}
+
+/* stats */
+.stats-row{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap}
+.stat{flex:1;min-width:120px;background:#1a1f2e;border:1px solid #2d3448;border-radius:7px;padding:13px 15px;border-top:3px solid}
+.stat.s-tot{border-top-color:#6366f1}.stat.s-dup{border-top-color:#b7770d}
+.stat.s-dif{border-top-color:#cc0000}.stat.s-t1{border-top-color:#ef4444}
+.stat.s-t2{border-top-color:#6366f1}.stat.s-t3{border-top-color:#ca8a04}.stat.s-naa{border-top-color:#334155}
+.sn{font-size:28px;font-weight:800;font-family:'Courier New',monospace;line-height:1}
+.stat.s-tot .sn{color:#818cf8}.stat.s-dup .sn{color:#d97706}.stat.s-dif .sn{color:#f87171}
+.stat.s-t1 .sn{color:#fca5a5}.stat.s-t2 .sn{color:#a5b4fc}.stat.s-t3 .sn{color:#fde047}.stat.s-naa .sn{color:#475569}
+.sl{font-size:11px;color:#475569;margin-top:5px;line-height:1.4}
+
+/* filter bar */
+.filter-bar{display:flex;align-items:center;gap:12px;background:#1a1f2e;border:1px solid #2d3448;border-radius:7px;padding:11px 15px;margin-bottom:15px;flex-wrap:wrap}
+.search-box{flex:1;min-width:200px;max-width:300px;background:#0f1117;border:1px solid #2d3448;color:#e2e8f0;font-size:13px;padding:7px 12px;border-radius:5px;outline:none;font-family:inherit}
+.search-box:focus{border-color:#6366f1}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{padding:4px 13px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid #2d3448;background:#0f1117;color:#64748b;transition:all .15s;text-transform:uppercase;letter-spacing:.05em}
+.chip.on-all{background:#6366f1;border-color:#6366f1;color:#fff}
+.chip.on-dup{background:#b7770d;border-color:#b7770d;color:#fff}
+.chip.on-dif{background:#cc0000;border-color:#cc0000;color:#fff}
+.chip.on-t1{background:#7a1010;border-color:#ef4444;color:#fca5a5}
+.chip.on-t2{background:#1e1b4b;border-color:#6366f1;color:#a5b4fc}
+.chip.on-t3{background:#451a03;border-color:#ca8a04;color:#fde047}
+.chip.on-naa{background:#1e293b;border-color:#475569;color:#94a3b8}
+.chip:hover{border-color:#6366f1;color:#a5b4fc}
+.rc{margin-left:auto;font-size:12px;color:#475569;font-family:'Courier New',monospace;white-space:nowrap}
+
+/* table */
+.tbl-wrap{background:#1a1f2e;border:1px solid #2d3448;border-radius:8px;overflow:hidden}
+.tbl-scroll{overflow-x:auto;max-height:620px;overflow-y:auto}
+.tbl-scroll::-webkit-scrollbar{width:5px;height:5px}
+.tbl-scroll::-webkit-scrollbar-track{background:#0f1117}
+.tbl-scroll::-webkit-scrollbar-thumb{background:#2d3448;border-radius:3px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead{position:sticky;top:0;z-index:5}
+thead th{background:#111827;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#475569;padding:10px 14px;text-align:left;border-bottom:1px solid #2d3448;white-space:nowrap}
+th.th-sec{min-width:150px}th.th-par{min-width:200px}
+th.th-t1{min-width:220px;color:#fca5a5}th.th-t2{min-width:220px;color:#a5b4fc}th.th-t3{min-width:220px;color:#fde047}
+th.th-st{width:130px;text-align:center}th.th-ac{min-width:220px}
+tbody td{padding:9px 14px;border-bottom:1px solid #1a2035;vertical-align:top}
+tbody tr:hover td{background:rgba(99,102,241,.04)}
+tbody tr:last-child td{border-bottom:none}
+tr.r-dup td{background:rgba(180,120,0,.06)}tr.r-dif td{background:rgba(200,0,0,.07)}
+tr.r-t1 td{background:rgba(239,68,68,.05)}tr.r-t2 td{background:rgba(99,102,241,.05)}tr.r-t3 td{background:rgba(202,138,4,.05)}
+.td-sec{font-size:11px;color:#6366f1;font-family:'Courier New',monospace;white-space:nowrap}
+.td-par{font-family:'Courier New',monospace;font-size:12px;color:#e2e8f0;font-weight:600;word-break:break-word}
+.td-val{font-family:'Courier New',monospace;font-size:12px;color:#94a3b8;word-break:break-all;max-width:260px}
+.td-val.miss{color:#2d3448;font-style:italic}.td-val.vd{color:#fca5a5}.td-val.vs{color:#86efac}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.p-dup{background:rgba(180,120,0,.2);border:1px solid rgba(180,120,0,.4);color:#fbbf24}
+.p-dif{background:rgba(200,0,0,.2);border:1px solid rgba(200,0,0,.4);color:#f87171}
+.p-t1{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#fca5a5}
+.p-t2{background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc}
+.p-t3{background:rgba(202,138,4,.15);border:1px solid rgba(202,138,4,.35);color:#fde047}
+.p-naa{background:rgba(71,85,105,.15);border:1px solid rgba(71,85,105,.35);color:#64748b}
+.na-badge{display:inline-block;padding:1px 7px;border-radius:3px;background:#1e293b;border:1px solid #334155;color:#475569;font-size:10px;font-weight:700;letter-spacing:.05em}
+tr.r-naa td{background:rgba(15,17,23,.6)}
+.td-val.naa{color:#334155;font-style:italic}
+.td-act{font-size:11px;color:#475569;line-height:1.55;max-width:240px}
+tr.sec-hdr td{background:#111827;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#6366f1;padding:6px 14px;border-bottom:1px solid #2d3448;border-top:2px solid #2d3448}
+
+/* progress */
+#prog{display:none;margin-bottom:16px}
+.prog-lbl{font-size:12px;color:#475569;margin-bottom:6px}
+.prog-track{background:#1a1f2e;border-radius:3px;height:4px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#cc0000,#6366f1);border-radius:3px;transition:width .3s}
+
+/* toast */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:11px 18px;border-radius:6px;font-size:13px;font-weight:600;display:none;align-items:center;gap:8px;box-shadow:0 4px 24px rgba(0,0,0,.4);max-width:380px}
+#toast.show{display:flex}
+#toast.ok{background:#1a4731;border:1px solid #22543d;color:#4ade80}
+#toast.err{background:#3b0d0d;border:1px solid #7f1d1d;color:#f87171}
+#toast.inf{background:#1e1b4b;border:1px solid #3730a3;color:#a5b4fc}
+
+#empty-st{display:none;text-align:center;padding:60px 20px;color:#334155;font-size:14px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="tb-brand"><span>PA</span> Panorama</div>
+  <div class="tb-div"></div>
+  <div class="tb-title">Template Comparator &mdash; Compare 2 or 3 Templates</div>
+
+</div>
+
+<div class="page">
+
+  <!-- UPLOAD CARDS -->
+  <div class="upload-grid">
+
+    <!-- T1 Required -->
+    <div class="upload-card" id="card-1">
+      <div class="uc-head t1">
+        <span class="bdg bdg-1">T1</span>
+        Template 1
+        <span class="tag-req">Required</span>
+      </div>
+      <div class="uc-body">
+        <input class="name-input" id="name-1" placeholder="e.g. T_Global" />
+        <div class="drop-zone" id="dz-1">
+          <input type="file" accept=".xml" id="file-1" onchange="onFile(1,this)">
+          <button class="clr" id="clr-1" onclick="clearSlot(1,event)" title="Remove">&#x2715;</button>
+          <div class="dz-icon">&#128196;</div>
+          <div class="dz-text">Drop XML here or click to browse</div>
+          <div class="dz-hint">Panorama &rsaquo; Setup &rsaquo; Operations &rsaquo; Export config</div>
+        </div>
+        <div id="info-1"></div>
+      </div>
+    </div>
+
+    <!-- T2 Required -->
+    <div class="upload-card" id="card-2">
+      <div class="uc-head t2">
+        <span class="bdg bdg-2">T2</span>
+        Template 2
+        <span class="tag-req">Required</span>
+      </div>
+      <div class="uc-body">
+        <input class="name-input" id="name-2" placeholder="e.g. T_Regional_APAC" />
+        <div class="drop-zone" id="dz-2">
+          <input type="file" accept=".xml" id="file-2" onchange="onFile(2,this)">
+          <button class="clr" id="clr-2" onclick="clearSlot(2,event)" title="Remove">&#x2715;</button>
+          <div class="dz-icon">&#128196;</div>
+          <div class="dz-text">Drop XML here or click to browse</div>
+          <div class="dz-hint">Panorama &rsaquo; Setup &rsaquo; Operations &rsaquo; Export config</div>
+        </div>
+        <div id="info-2"></div>
+      </div>
+    </div>
+
+    <!-- T3 Optional -->
+    <div class="upload-card opt" id="card-3">
+      <div class="uc-head t3">
+        <span class="bdg bdg-3">T3</span>
+        Template 3
+        <span class="tag-opt">Optional</span>
+      </div>
+      <div class="uc-body">
+        <input class="name-input" id="name-3" placeholder="e.g. T_Local_Branch" />
+        <div class="drop-zone" id="dz-3">
+          <input type="file" accept=".xml" id="file-3" onchange="onFile(3,this)">
+          <button class="clr" id="clr-3" onclick="clearSlot(3,event)" title="Remove">&#x2715;</button>
+          <div class="dz-icon">&#128196;</div>
+          <div class="dz-text">Drop XML here or click to browse<br>
+            <span style="font-size:10px;color:#374151">Leave empty to compare T1 vs T2 only</span>
+          </div>
+          <div class="dz-hint">Panorama &rsaquo; Setup &rsaquo; Operations &rsaquo; Export config</div>
+        </div>
+        <div id="info-3"></div>
+      </div>
+    </div>
+
+  </div><!-- /upload-grid -->
+
+  <!-- ACTION BAR -->
+  <div class="action-bar">
+    <button class="btn btn-run"   id="btn-run" onclick="runCompare()" disabled>&#9889; Compare Templates</button>
+    <button class="btn btn-csv"   id="btn-csv" onclick="exportCSV()"  disabled>&#128203; Export CSV</button>
+    <button class="btn btn-xl"    id="btn-xl"  onclick="exportXLSX()" disabled>&#128202; Export Parameter Details</button>
+    <button class="btn btn-reset" onclick="resetAll()">&#8634; Reset</button>
+    <span class="status-txt" id="status-txt"></span>
+  </div>
+
+  <!-- PROGRESS -->
+  <div id="prog">
+    <div class="prog-lbl" id="prog-lbl">Processing&hellip;</div>
+    <div class="prog-track"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row" id="stats-row" style="display:none">
+    <div class="stat s-tot"><div class="sn" id="sn-tot">0</div><div class="sl">Total parameters<br>compared</div></div>
+    <div class="stat s-dup"><div class="sn" id="sn-dup">0</div><div class="sl">&#9888; Identical<br><em>remove from lower templates</em></div></div>
+    <div class="stat s-dif"><div class="sn" id="sn-dif">0</div><div class="sl">&#10007; Different values<br><em>conflict &mdash; check priority</em></div></div>
+    <div class="stat s-t1"><div class="sn" id="sn-t1o">0</div><div class="sl" id="lbl-t1o">T1 only</div></div>
+    <div class="stat s-t2"><div class="sn" id="sn-t2o">0</div><div class="sl" id="lbl-t2o">T2 only</div></div>
+    <div class="stat s-t3" id="stat-t3" style="display:none">
+      <div class="sn" id="sn-t3o">0</div><div class="sl" id="lbl-t3o">T3 only</div>
+    </div>
+    <div class="stat s-naa">
+      <div class="sn" id="sn-naa">0</div><div class="sl">&#8212; Not Set<br><em>not in any template</em></div>
+    </div>
+  </div>
+
+  <!-- FILTER BAR -->
+  <div class="filter-bar" id="filter-bar" style="display:none">
+    <input class="search-box" id="search" type="text" placeholder="Search parameter or value&hellip;" oninput="applyFilter()">
+    <div class="chips">
+      <span class="chip on-all" id="chip-ALL"  onclick="setChip('ALL')">All</span>
+      <span class="chip"        id="chip-DUP"  onclick="setChip('DUP')">&#9888; Identical</span>
+      <span class="chip"        id="chip-DIF"  onclick="setChip('DIF')">&#10007; Different</span>
+      <span class="chip"        id="chip-T1O"  onclick="setChip('T1O')">T1 Only</span>
+      <span class="chip"        id="chip-T2O"  onclick="setChip('T2O')">T2 Only</span>
+      <span class="chip"        id="chip-T3O"  onclick="setChip('T3O')" style="display:none">T3 Only</span>
+      <span class="chip"        id="chip-NAA"  onclick="setChip('NAA')">&#8212; Not Set</span>
+    </div>
+    <div class="rc" id="row-count">0 rows</div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="tbl-wrap" id="tbl-wrap" style="display:none">
+    <div class="tbl-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="th-sec">Config Section</th>
+            <th class="th-par">Parameter</th>
+            <th class="th-t1" id="hdr-t1">T1</th>
+            <th class="th-t2" id="hdr-t2">T2</th>
+            <th class="th-t3" id="hdr-t3" style="display:none">T3</th>
+            <th class="th-st">Status</th>
+            <th class="th-ac">Action Required</th>
+          </tr>
+        </thead>
+        <tbody id="main-tbody"></tbody>
+      </table>
+      <div id="empty-st">
+        <div style="font-size:48px;margin-bottom:14px;opacity:.3">&#128269;</div>
+        No matching parameters found.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /page -->
+<div id="toast"></div>
+
+<script>
+// ================================================================
+// STATE
+// ================================================================
+const TMPL = {1:null, 2:null, 3:null};
+let ROWS = [];
+let CHIP = 'ALL';
+
+// ================================================================
+// PARAMETER DEFINITIONS
+// Paths verified against Panorama template XML export structure:
+//   <config>
+//     <devices><entry name="localhost.localdomain">
+//       <template><entry name="...">
+//         <config>
+//           <devices><entry name="localhost.localdomain">
+//             <deviceconfig>
+//               <s>  <!-- system settings node is <s>, NOT <system> -->
+//               <setting>
+//             <vsys><entry name="vsys1">
+//           <shared>   <!-- server-profiles, auth-profiles, certs -->
+//           <mgt-config>  <!-- password complexity, admin users -->
+// ================================================================
+
+// Shorthand prefix for all template config paths (from doc root <config>)
+// All parameters live inside: devices/entry/template/entry/config/
+const P = 'devices/entry/template/entry/config/';
+
+const PARAMS = [
+
+  // ════════════ DEVICE › SERVICES ════════════
+  { section:'Device › Services', label:'Hostname',                      paths:[P+'devices/entry/deviceconfig/system/hostname'] },
+  { section:'Device › Services', label:'Domain',                        paths:[P+'devices/entry/deviceconfig/system/domain'] },
+  { section:'Device › Services', label:'Timezone',                      paths:[P+'devices/entry/deviceconfig/system/timezone'] },
+  { section:'Device › Services', label:'Latitude',                      paths:[P+'devices/entry/deviceconfig/system/latitude'] },
+  { section:'Device › Services', label:'Longitude',                     paths:[P+'devices/entry/deviceconfig/system/longitude'] },
+  { section:'Device › Services', label:'Primary DNS Server',            paths:[P+'devices/entry/deviceconfig/system/dns-setting/servers/primary'] },
+  { section:'Device › Services', label:'Secondary DNS Server',          paths:[P+'devices/entry/deviceconfig/system/dns-setting/servers/secondary'] },
+  { section:'Device › Services', label:'Primary NTP Server',            paths:[P+'devices/entry/deviceconfig/system/ntp-servers/primary-ntp-server/ntp-server-address'] },
+  { section:'Device › Services', label:'Secondary NTP Server',          paths:[P+'devices/entry/deviceconfig/system/ntp-servers/secondary-ntp-server/ntp-server-address'] },
+  { section:'Device › Services', label:'Update Server',                 paths:[P+'devices/entry/deviceconfig/system/update-server'] },
+  { section:'Device › Services', label:'Panorama Server (Primary)',     paths:[P+'devices/entry/deviceconfig/system/panorama-server'] },
+  { section:'Device › Services', label:'Panorama Server (Secondary)',   paths:[P+'devices/entry/deviceconfig/system/panorama-server-2'] },
+  { section:'Device › Services', label:'Proxy Server',                  paths:[P+'devices/entry/deviceconfig/system/proxy-server'] },
+  { section:'Device › Services', label:'Proxy Port',                    paths:[P+'devices/entry/deviceconfig/system/proxy-port'] },
+  { section:'Device › Services', label:'Proxy User',                    paths:[P+'devices/entry/deviceconfig/system/proxy-user'] },
+  { section:'Device › Services', label:'Authentication Profile',        paths:[P+'devices/entry/deviceconfig/system/authentication-profile'] },
+  { section:'Device › Services', label:'SSL/TLS Service Profile',       paths:[P+'devices/entry/deviceconfig/system/ssl-tls-service-profile'] },
+  { section:'Device › Services', label:'Speed/Duplex',                  paths:[P+'devices/entry/deviceconfig/system/speed-duplex'] },
+  { section:'Device › Services', label:'MTU',                           paths:[P+'devices/entry/deviceconfig/system/mtu'] },
+
+  // ════════════ DEVICE › MANAGEMENT ════════════
+  { section:'Device › Management', label:'Login Banner',                paths:[P+'devices/entry/deviceconfig/system/login-banner'] },
+  { section:'Device › Management', label:'Idle Timeout (min)',          paths:[P+'devices/entry/deviceconfig/system/idle-timeout'] },
+  { section:'Device › Management', label:'Disable HTTPS',               paths:[P+'devices/entry/deviceconfig/system/service/disable-https'] },
+  { section:'Device › Management', label:'Disable HTTP',                paths:[P+'devices/entry/deviceconfig/system/service/disable-http'] },
+  { section:'Device › Management', label:'Disable SSH',                 paths:[P+'devices/entry/deviceconfig/system/service/disable-ssh'] },
+  { section:'Device › Management', label:'Disable Telnet',              paths:[P+'devices/entry/deviceconfig/system/service/disable-telnet'] },
+  { section:'Device › Management', label:'Disable SNMP',                paths:[P+'devices/entry/deviceconfig/system/service/disable-snmp'] },
+  { section:'Device › Management', label:'Disable UserID Service',      paths:[P+'devices/entry/deviceconfig/system/service/disable-userid-service'] },
+  { section:'Device › Management', label:'Disable ICMP',                paths:[P+'devices/entry/deviceconfig/system/service/disable-icmp'] },
+  { section:'Device › Management', label:'Jumbo Frame',                 paths:[P+'devices/entry/deviceconfig/system/jumbo-frame'] },
+
+  // ════════════ DEVICE › SETTINGS ════════════
+  { section:'Device › Settings', label:'Certificate Expiration Check',   paths:[P+'devices/entry/deviceconfig/setting/management/enable-certificate-expiration-check'] },
+  { section:'Device › Settings', label:'Audit Tracking — Op Commands',   paths:[P+'devices/entry/deviceconfig/setting/management/audit-tracking/op-commands'] },
+  { section:'Device › Settings', label:'Audit Tracking — UI Actions',    paths:[P+'devices/entry/deviceconfig/setting/management/audit-tracking/ui-actions'] },
+  { section:'Device › Settings', label:'Audit Tracking — Send Syslog',   paths:[P+'devices/entry/deviceconfig/setting/management/audit-tracking/send-syslog'] },
+  { section:'Device › Settings', label:'Log High DP Load',               paths:[P+'devices/entry/deviceconfig/setting/management/enable-log-high-dp-load'] },
+  { section:'Device › Settings', label:'AutoFocus Enabled',              paths:[P+'devices/entry/deviceconfig/setting/autofocus/enabled'] },
+  { section:'Device › Settings', label:'Config Rematch',                 paths:[P+'devices/entry/deviceconfig/setting/config/rematch'] },
+  { section:'Device › Settings', label:'Telemetry — Threat Prevention',  paths:[P+'devices/entry/deviceconfig/setting/telemetry/threat-prevention-packet-captures'] },
+  { section:'Device › Settings', label:'Telemetry — Product Usage',      paths:[P+'devices/entry/deviceconfig/setting/telemetry/product-usage-stats'] },
+
+  // ════════════ DEVICE › SESSION PROTECTION ════════════
+  { section:'Device › Session Protection', label:'Packet Buffer Protection Enable',               paths:[P+'devices/entry/deviceconfig/setting/session/packet-buffer-protection-enable'] },
+  { section:'Device › Session Protection', label:'Packet Buffer Protection Activate (%)',         paths:[P+'devices/entry/deviceconfig/setting/session/packet-buffer-protection-activate'] },
+  { section:'Device › Session Protection', label:'Packet Buffer Protection Block Countdown (%)',  paths:[P+'devices/entry/deviceconfig/setting/session/packet-buffer-protection-block-countdown'] },
+  { section:'Device › Session Protection', label:'ICMP Unreachable Rate',                        paths:[P+'devices/entry/deviceconfig/setting/session/icmp-unreachable-rate'] },
+  { section:'Device › Session Protection', label:'IPv6 Firewall Enabled',                        paths:[P+'devices/entry/deviceconfig/setting/session/ipv6-firewall-enable'] },
+
+  // ════════════ DEVICE › HIGH AVAILABILITY ════════════
+  { section:'Device › High Availability', label:'HA Enabled',             paths:[P+'devices/entry/deviceconfig/high-availability/enabled'] },
+  { section:'Device › High Availability', label:'HA Group ID',            paths:[P+'devices/entry/deviceconfig/high-availability/group/group-id'] },
+  { section:'Device › High Availability', label:'HA Preemptive',          paths:[P+'devices/entry/deviceconfig/high-availability/group/election-option/preemptive'] },
+  { section:'Device › High Availability', label:'HA Priority',            paths:[P+'devices/entry/deviceconfig/high-availability/group/election-option/priority'] },
+  { section:'Device › High Availability', label:'Heartbeat Backup',       paths:[P+'devices/entry/deviceconfig/high-availability/group/monitoring/heartbeat-backup'] },
+  { section:'Device › High Availability', label:'HA1 Port',               paths:[P+'devices/entry/deviceconfig/high-availability/group/ha1/port'] },
+  { section:'Device › High Availability', label:'HA1 IP Address',         paths:[P+'devices/entry/deviceconfig/high-availability/group/ha1/ip-address'] },
+  { section:'Device › High Availability', label:'HA1 Encryption',         paths:[P+'devices/entry/deviceconfig/high-availability/group/ha1/encrypt-enable'] },
+  { section:'Device › High Availability', label:'HA2 Port',               paths:[P+'devices/entry/deviceconfig/high-availability/group/ha2/port'] },
+  { section:'Device › High Availability', label:'HA2 IP Address',         paths:[P+'devices/entry/deviceconfig/high-availability/group/ha2/ip-address'] },
+  { section:'Device › High Availability', label:'HA2 Keep-Alive',         paths:[P+'devices/entry/deviceconfig/high-availability/group/ha2/keep-alive-enable'] },
+  { section:'Device › High Availability', label:'State Sync Enabled',     paths:[P+'devices/entry/deviceconfig/high-availability/group/state-synchronization/enabled'] },
+  { section:'Device › High Availability', label:'Config Sync',            paths:[P+'devices/entry/deviceconfig/high-availability/group/config-sync'] },
+
+  // ════════════ DEVICE › PASSWORD COMPLEXITY ════════════
+  { section:'Device › Password Complexity', label:'Minimum Length',                     paths:[P+'mgt-config/password-complexity/minimum-length'] },
+  { section:'Device › Password Complexity', label:'Minimum Uppercase Letters',          paths:[P+'mgt-config/password-complexity/minimum-uppercase-letters'] },
+  { section:'Device › Password Complexity', label:'Minimum Lowercase Letters',          paths:[P+'mgt-config/password-complexity/minimum-lowercase-letters'] },
+  { section:'Device › Password Complexity', label:'Minimum Numeric Letters',            paths:[P+'mgt-config/password-complexity/minimum-numeric-letters'] },
+  { section:'Device › Password Complexity', label:'Minimum Special Characters',         paths:[P+'mgt-config/password-complexity/minimum-special-characters'] },
+  { section:'Device › Password Complexity', label:'New Password Differs By (chars)',    paths:[P+'mgt-config/password-complexity/new-password-differs-by-characters'] },
+  { section:'Device › Password Complexity', label:'Password Change on First Login',     paths:[P+'mgt-config/password-complexity/password-change-on-first-login'] },
+  { section:'Device › Password Complexity', label:'Password History Count',             paths:[P+'mgt-config/password-complexity/password-history-count'] },
+  { section:'Device › Password Complexity', label:'Password Expiration Period (days)',  paths:[P+'mgt-config/password-complexity/password-change/expiration-period'] },
+  { section:'Device › Password Complexity', label:'Expiration Warning Period (days)',   paths:[P+'mgt-config/password-complexity/password-change/expiration-warning-period'] },
+  { section:'Device › Password Complexity', label:'Post-Expiration Grace Period (days)',paths:[P+'mgt-config/password-complexity/password-change/post-expiration-grace-period'] },
+  { section:'Device › Password Complexity', label:'Lockout Failed Attempts',            paths:[P+'mgt-config/password-complexity/failed-attempts'] },
+  { section:'Device › Password Complexity', label:'Lockout Time (min)',                 paths:[P+'mgt-config/password-complexity/lockout-time'] },
+
+  // ════════════ SHARED › CERTIFICATES ════════════
+  { section:'Shared › Certificates', label:'Certificate — Common Name',    paths:[P+'shared/certificate/entry/common-name'] },
+  { section:'Shared › Certificates', label:'Certificate — CA',             paths:[P+'shared/certificate/entry/ca'] },
+  { section:'Shared › Certificates', label:'Certificate — Algorithm',      paths:[P+'shared/certificate/entry/algorithm'] },
+  { section:'Shared › Certificates', label:'Certificate — Not Valid Before',paths:[P+'shared/certificate/entry/not-valid-before'] },
+  { section:'Shared › Certificates', label:'Certificate — Not Valid After', paths:[P+'shared/certificate/entry/not-valid-after'] },
+  { section:'Shared › Certificates', label:'Certificate — Issuer',         paths:[P+'shared/certificate/entry/issuer'] },
+
+  // ════════════ SHARED › SSL/TLS PROFILE ════════════
+  { section:'Shared › SSL/TLS Profile', label:'SSL/TLS — Min Version',   paths:[P+'shared/ssl-tls-service-profile/entry/protocol-settings/min-version'] },
+  { section:'Shared › SSL/TLS Profile', label:'SSL/TLS — Max Version',   paths:[P+'shared/ssl-tls-service-profile/entry/protocol-settings/max-version'] },
+  { section:'Shared › SSL/TLS Profile', label:'SSL/TLS — Certificate',   paths:[P+'shared/ssl-tls-service-profile/entry/certificate'] },
+
+  // ════════════ SHARED › AUTHENTICATION PROFILE ════════════
+  { section:'Shared › Auth Profile', label:'Auth — Radius Server Profile', paths:[P+'shared/authentication-profile/entry/method/radius/server-profile'] },
+  { section:'Shared › Auth Profile', label:'Auth — LDAP Server Profile',   paths:[P+'shared/authentication-profile/entry/method/ldap/server-profile'] },
+  { section:'Shared › Auth Profile', label:'Auth — Kerberos Realm',        paths:[P+'shared/authentication-profile/entry/method/kerberos/realm'] },
+  { section:'Shared › Auth Profile', label:'Auth — MFA Enabled',           paths:[P+'shared/authentication-profile/entry/multi-factor-auth/mfa-enable'] },
+  { section:'Shared › Auth Profile', label:'Auth — MFA Timeout (sec)',      paths:[P+'shared/authentication-profile/entry/multi-factor-auth/mfa-client-timeout'] },
+
+  // ════════════ SHARED › RADIUS PROFILE ════════════
+  { section:'Shared › Radius Profile', label:'Radius — Protocol',      paths:[P+'shared/server-profile/radius/entry/protocol/PAP',
+                                                                               P+'shared/server-profile/radius/entry/protocol/CHAP',
+                                                                               P+'shared/server-profile/radius/entry/protocol/PEAP-MSCHAPv2'] },
+  { section:'Shared › Radius Profile', label:'Radius — Timeout (sec)', paths:[P+'shared/server-profile/radius/entry/timeout'] },
+  { section:'Shared › Radius Profile', label:'Radius — Retries',       paths:[P+'shared/server-profile/radius/entry/retries'] },
+  { section:'Shared › Radius Profile', label:'Radius — Server 1 IP',   paths:[P+'shared/server-profile/radius/entry/server/entry/ip-address'] },
+  { section:'Shared › Radius Profile', label:'Radius — Server 1 Port', paths:[P+'shared/server-profile/radius/entry/server/entry/port'] },
+
+  // ════════════ SHARED › LDAP PROFILE ════════════
+  { section:'Shared › LDAP Profile', label:'LDAP — SSL',                      paths:[P+'shared/server-profile/ldap/entry/ssl'] },
+  { section:'Shared › LDAP Profile', label:'LDAP — Verify Server Certificate', paths:[P+'shared/server-profile/ldap/entry/verify-server-certificate'] },
+  { section:'Shared › LDAP Profile', label:'LDAP — Base DN',                  paths:[P+'shared/server-profile/ldap/entry/base'] },
+  { section:'Shared › LDAP Profile', label:'LDAP — Bind DN',                  paths:[P+'shared/server-profile/ldap/entry/bind-dn'] },
+  { section:'Shared › LDAP Profile', label:'LDAP — Server 1 Address',         paths:[P+'shared/server-profile/ldap/entry/server/entry/address'] },
+  { section:'Shared › LDAP Profile', label:'LDAP — Server 1 Port',            paths:[P+'shared/server-profile/ldap/entry/server/entry/port'] },
+  { section:'Shared › LDAP Profile', label:'LDAP — Type',                     paths:[P+'shared/server-profile/ldap/entry/ldap-type'] },
+  { section:'Shared › LDAP Profile', label:'LDAP — Timeout (sec)',            paths:[P+'shared/server-profile/ldap/entry/timelimit'] },
+
+  // ════════════ SHARED › SYSLOG PROFILE ════════════
+  { section:'Shared › Syslog Profile', label:'Syslog — Server 1 Transport', paths:[P+'shared/log-settings/syslog/entry/server/entry/transport'] },
+  { section:'Shared › Syslog Profile', label:'Syslog — Server 1 Port',      paths:[P+'shared/log-settings/syslog/entry/server/entry/port'] },
+  { section:'Shared › Syslog Profile', label:'Syslog — Server 1 Format',    paths:[P+'shared/log-settings/syslog/entry/server/entry/format'] },
+  { section:'Shared › Syslog Profile', label:'Syslog — Server 1 IP',        paths:[P+'shared/log-settings/syslog/entry/server/entry/server'] },
+  { section:'Shared › Syslog Profile', label:'Syslog — Server 1 Facility',  paths:[P+'shared/log-settings/syslog/entry/server/entry/facility'] },
+
+  // ════════════ DEVICE › VSYS GROUP MAPPING ════════════
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — Domain',            paths:[P+'devices/entry/vsys/entry/group-mapping/entry/domain'] },
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — Server Profile',    paths:[P+'devices/entry/vsys/entry/group-mapping/entry/server-profile'] },
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — Group Include List',paths:[P+'devices/entry/vsys/entry/group-mapping/entry/group-include-list/member'] },
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — User Name',         paths:[P+'devices/entry/vsys/entry/group-mapping/entry/user-name/member'] },
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — Group Name',        paths:[P+'devices/entry/vsys/entry/group-mapping/entry/group-name/member'] },
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — Alt Username 1',    paths:[P+'devices/entry/vsys/entry/group-mapping/entry/alternate-user-name-1/member'] },
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — Alt Username 2',    paths:[P+'devices/entry/vsys/entry/group-mapping/entry/alternate-user-name-2/member'] },
+  { section:'Device › vsys Group Mapping', label:'Group Mapping — Alt Username 3',    paths:[P+'devices/entry/vsys/entry/group-mapping/entry/alternate-user-name-3/member'] },
+
+  // ════════════ NETWORK › GENERAL ════════════
+  { section:'Network › General', label:'Default Virtual Router',      paths:[P+'devices/entry/network/virtual-router/entry/@name'] },
+  { section:'Network › General', label:'LLDP Enabled',                paths:[P+'devices/entry/network/lldp/enable'] },
+  { section:'Network › General', label:'DNS Proxy Enabled',           paths:[P+'devices/entry/network/dns-proxy/entry/enabled'] },
+
+  // ════════════ NETWORK › IKE CRYPTO PROFILES ════════════
+  { section:'Network › IKE Crypto Profiles', label:'IKE Crypto Profile (first name)', paths:[P+'devices/entry/network/ike/crypto-profiles/ike-crypto-profiles/entry/@name'] },
+  { section:'Network › IKE Crypto Profiles', label:'IKE Crypto — DH Group',           paths:[P+'devices/entry/network/ike/crypto-profiles/ike-crypto-profiles/entry/dh-group/member'] },
+  { section:'Network › IKE Crypto Profiles', label:'IKE Crypto — Authentication',     paths:[P+'devices/entry/network/ike/crypto-profiles/ike-crypto-profiles/entry/hash/member'] },
+  { section:'Network › IKE Crypto Profiles', label:'IKE Crypto — Encryption',         paths:[P+'devices/entry/network/ike/crypto-profiles/ike-crypto-profiles/entry/encryption/member'] },
+  { section:'Network › IKE Crypto Profiles', label:'IKE Crypto — Lifetime (sec)',     paths:[P+'devices/entry/network/ike/crypto-profiles/ike-crypto-profiles/entry/lifetime/seconds'] },
+
+  // ════════════ NETWORK › IPSEC CRYPTO PROFILES ════════════
+  { section:'Network › IPSec Crypto Profiles', label:'IPSec Crypto Profile (first name)',paths:[P+'devices/entry/network/ike/crypto-profiles/ipsec-crypto-profiles/entry/@name'] },
+  { section:'Network › IPSec Crypto Profiles', label:'IPSec Crypto — ESP Encryption',   paths:[P+'devices/entry/network/ike/crypto-profiles/ipsec-crypto-profiles/entry/esp/encryption/member'] },
+  { section:'Network › IPSec Crypto Profiles', label:'IPSec Crypto — ESP Authentication',paths:[P+'devices/entry/network/ike/crypto-profiles/ipsec-crypto-profiles/entry/esp/authentication/member'] },
+  { section:'Network › IPSec Crypto Profiles', label:'IPSec Crypto — DH Group',          paths:[P+'devices/entry/network/ike/crypto-profiles/ipsec-crypto-profiles/entry/dh-group'] },
+  { section:'Network › IPSec Crypto Profiles', label:'IPSec Crypto — Lifetime (sec)',    paths:[P+'devices/entry/network/ike/crypto-profiles/ipsec-crypto-profiles/entry/lifetime/seconds'] },
+
+  // ════════════ NETWORK › ZONE PROTECTION PROFILES ════════════
+  { section:'Network › Zone Protection Profiles', label:'Zone Protection Profile (first name)',  paths:[P+'devices/entry/network/profiles/zone-protection-profile/entry/@name'] },
+  { section:'Network › Zone Protection Profiles', label:'Zone Protection — SYN Flood Enable',    paths:[P+'devices/entry/network/profiles/zone-protection-profile/entry/flood/tcp-syn/enable'] },
+  { section:'Network › Zone Protection Profiles', label:'Zone Protection — UDP Flood Enable',    paths:[P+'devices/entry/network/profiles/zone-protection-profile/entry/flood/udp/enable'] },
+  { section:'Network › Zone Protection Profiles', label:'Zone Protection — ICMP Flood Enable',   paths:[P+'devices/entry/network/profiles/zone-protection-profile/entry/flood/icmp/enable'] },
+
+  // ════════════ NETWORK › INTERFACE MGMT PROFILES ════════════
+  { section:'Network › Interface Mgmt Profiles', label:'Interface Mgmt Profile (first name)', paths:[P+'devices/entry/network/profiles/interface-management-profile/entry/@name'] },
+  { section:'Network › Interface Mgmt Profiles', label:'Interface Mgmt — HTTPS',             paths:[P+'devices/entry/network/profiles/interface-management-profile/entry/https'] },
+  { section:'Network › Interface Mgmt Profiles', label:'Interface Mgmt — SSH',               paths:[P+'devices/entry/network/profiles/interface-management-profile/entry/ssh'] },
+  { section:'Network › Interface Mgmt Profiles', label:'Interface Mgmt — Ping',              paths:[P+'devices/entry/network/profiles/interface-management-profile/entry/ping'] },
+  { section:'Network › Interface Mgmt Profiles', label:'Interface Mgmt — SNMP',              paths:[P+'devices/entry/network/profiles/interface-management-profile/entry/snmp'] },
+  { section:'Network › Interface Mgmt Profiles', label:'Interface Mgmt — Response Pages',    paths:[P+'devices/entry/network/profiles/interface-management-profile/entry/response-pages'] },
+];
+
+const DYNAMIC_LISTS = [
+  // Device
+  { section:'Device › Permitted IPs',        basePath:P.slice(0,-1)+'/devices/entry/deviceconfig/system/permitted-ip/entry',                       label:'Permitted IP' },
+  { section:'Device › vsys Group Mapping',   basePath:P.slice(0,-1)+'/devices/entry/vsys/entry/group-mapping/entry',                           label:'Group Mapping' },
+
+  // Shared
+  { section:'Shared › Certificates',         basePath:P.slice(0,-1)+'/shared/certificate/entry',                                               label:'Certificate' },
+  { section:'Shared › SSL/TLS Profiles',     basePath:P.slice(0,-1)+'/shared/ssl-tls-service-profile/entry',                                   label:'SSL/TLS Profile' },
+  { section:'Shared › Auth Profiles',        basePath:P.slice(0,-1)+'/shared/authentication-profile/entry',                                    label:'Auth Profile' },
+  { section:'Shared › Server Profiles (Radius)', basePath:P.slice(0,-1)+'/shared/server-profile/radius/entry',                                 label:'Radius Profile' },
+  { section:'Shared › Server Profiles (LDAP)',   basePath:P.slice(0,-1)+'/shared/server-profile/ldap/entry',                                   label:'LDAP Profile' },
+  { section:'Shared › Server Profiles (Netflow)',basePath:P.slice(0,-1)+'/shared/server-profile/netflow/entry',                                label:'Netflow Profile' },
+  { section:'Shared › Log Settings (Syslog)',    basePath:P.slice(0,-1)+'/shared/log-settings/syslog/entry',                                   label:'Syslog Profile' },
+  { section:'Shared › Log Settings (SNMP Trap)', basePath:P.slice(0,-1)+'/shared/log-settings/snmptrap/entry',                                 label:'SNMP Trap Profile' },
+
+  // Network — Interfaces
+  { section:'Network › Ethernet Interfaces',     basePath:P.slice(0,-1)+'/devices/entry/network/interface/ethernet/entry',                     label:'Ethernet Interface' },
+  { section:'Network › Aggregate Interfaces',    basePath:P.slice(0,-1)+'/devices/entry/network/interface/aggregate-ethernet/entry',           label:'Aggregate Interface' },
+  { section:'Network › Loopback Interfaces',     basePath:P.slice(0,-1)+'/devices/entry/network/interface/loopback/entry',                     label:'Loopback Interface' },
+  { section:'Network › Tunnel Interfaces',       basePath:P.slice(0,-1)+'/devices/entry/network/interface/tunnel/entry',                       label:'Tunnel Interface' },
+  { section:'Network › VLAN Interfaces',         basePath:P.slice(0,-1)+'/devices/entry/network/interface/vlan/entry',                         label:'VLAN Interface' },
+
+  // Network — Topology
+  { section:'Network › Zones',                   basePath:P.slice(0,-1)+'/devices/entry/vsys/entry/zone/entry',                                label:'Zone' },
+  { section:'Network › Virtual Routers',         basePath:P.slice(0,-1)+'/devices/entry/network/virtual-router/entry',                        label:'Virtual Router' },
+
+  // Network — VPN
+  { section:'Network › IKE Gateways',            basePath:P.slice(0,-1)+'/devices/entry/network/ike/gateway/entry',                            label:'IKE Gateway' },
+  { section:'Network › IPSec Tunnels',           basePath:P.slice(0,-1)+'/devices/entry/network/tunnel/ipsec/entry',                           label:'IPSec Tunnel' },
+
+  // Network — Profiles
+  { section:'Network › IKE Crypto Profiles',     basePath:P.slice(0,-1)+'/devices/entry/network/ike/crypto-profiles/ike-crypto-profiles/entry',  label:'IKE Crypto Profile' },
+  { section:'Network › IPSec Crypto Profiles',   basePath:P.slice(0,-1)+'/devices/entry/network/ike/crypto-profiles/ipsec-crypto-profiles/entry', label:'IPSec Crypto Profile' },
+  { section:'Network › Zone Protection Profiles',basePath:P.slice(0,-1)+'/devices/entry/network/profiles/zone-protection-profile/entry',         label:'Zone Protection Profile' },
+  { section:'Network › Interface Mgmt Profiles', basePath:P.slice(0,-1)+'/devices/entry/network/profiles/interface-management-profile/entry',    label:'Interface Mgmt Profile' },
+  { section:'Network › QoS Profiles',            basePath:P.slice(0,-1)+'/devices/entry/network/qos/profile/entry',                              label:'QoS Profile' },
+  { section:'Network › DNS Proxy',               basePath:P.slice(0,-1)+'/devices/entry/network/dns-proxy/entry',                               label:'DNS Proxy' },
+];
+
+// ================================================================
+// DRAG & DROP// ================================================================
+// DRAG & DROP
+// ================================================================
+[1,2,3].forEach(n => {
+  const dz = document.getElementById('dz-' + n);
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault();
+    dz.classList.remove('over');
+    const f = e.dataTransfer.files[0];
+    if (f) {
+      const dt = new DataTransfer();
+      dt.items.add(f);
+      document.getElementById('file-' + n).files = dt.files;
+      onFile(n, document.getElementById('file-' + n));
+    }
+  });
+});
+
+// ================================================================
+// FILE UPLOAD
+// ================================================================
+async function onFile(n, input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.name.toLowerCase().endsWith('.xml')) { toast('Please upload a .xml file', 'err'); return; }
+  try {
+    const text = await readFile(file);
+    const doc = (new DOMParser()).parseFromString(text, 'application/xml');
+    if (doc.querySelector('parsererror')) { toast('XML parse error in template ' + n, 'err'); return; }
+
+    TMPL[n] = { doc, name: file.name };
+
+    // Auto-fill name from filename
+    const ni = document.getElementById('name-' + n);
+    if (!ni.value.trim()) ni.value = file.name.replace(/\.xml$/i, '');
+
+    // Visual feedback
+    document.getElementById('dz-' + n).classList.remove('over');
+    document.getElementById('dz-' + n).classList.add('ld' + n);
+    document.getElementById('clr-' + n).classList.add('show');
+    if (n === 3) document.getElementById('card-3').classList.add('loaded');
+
+    document.getElementById('info-' + n).innerHTML =
+      '<div class="file-ok"><div class="file-ok-icon">&#10003;</div>' +
+      '<div><div class="fn">' + esc(file.name) + '</div>' +
+      '<div class="fm">' + (file.size/1024).toFixed(1) + ' KB &middot; XML parsed OK</div></div></div>';
+
+    checkReady();
+    toast('Template ' + n + ' loaded', 'ok');
+  } catch(e) { toast('Error: ' + e.message, 'err'); }
+}
+
+function clearSlot(n, evt) {
+  evt.preventDefault(); evt.stopPropagation();
+  TMPL[n] = null;
+  document.getElementById('file-' + n).value = '';
+  document.getElementById('info-' + n).innerHTML = '';
+  document.getElementById('dz-' + n).className = 'drop-zone';
+  document.getElementById('clr-' + n).classList.remove('show');
+  if (n === 3) document.getElementById('card-3').classList.remove('loaded');
+  checkReady();
+}
+
+function checkReady() {
+  const ok = TMPL[1] && TMPL[2];
+  document.getElementById('btn-run').disabled = !ok;
+  document.getElementById('status-txt').textContent = ok
+    ? 'Ready: T1 + T2' + (TMPL[3] ? ' + T3' : '') + ' loaded'
+    : 'Load T1 and T2 to compare';
+}
+
+// ================================================================
+// XML HELPERS  (exact same extraction logic as original)
+// ================================================================
+function getVal(doc, paths) {
+  for (const path of paths) {
+    const v = extractPath(doc.documentElement, path);
+    if (v !== null) return v;
+  }
+  return null;
+}
+
+function extractPath(root, path) {
+  const parts = path.split('/');
+  let nodes = [root];
+  for (const part of parts) {
+    if (!nodes.length) return null;
+    const isAttrResult = part.startsWith('@');
+    const attrMatch    = part.match(/^([^[]+)\[@name="([^"]+)"\]$/);
+    const next = [];
+    if (isAttrResult) {
+      const an = part.slice(1);
+      for (const nd of nodes) { const v = nd.getAttribute(an); if (v) return v; }
+      return null;
+    } else if (attrMatch) {
+      const [, tag, nv] = attrMatch;
+      for (const nd of nodes)
+        Array.from(nd.children).filter(c => c.tagName === tag && c.getAttribute('name') === nv).forEach(c => next.push(c));
+    } else {
+      for (const nd of nodes)
+        Array.from(nd.children).filter(c => c.tagName === part).forEach(c => next.push(c));
+    }
+    nodes = next;
+  }
+  if (!nodes.length) return null;
+  return (nodes[0].textContent || '').trim() || null;
+}
+
+function getNamedList(doc, basePath) {
+  const parts = basePath.split('/');
+  let nodes = [doc.documentElement];
+  for (const part of parts) {
+    const next = [];
+    for (const nd of nodes) Array.from(nd.children).filter(c => c.tagName === part).forEach(c => next.push(c));
+    nodes = next;
+  }
+  return nodes.filter(nd => nd.getAttribute('name')).map(nd => nd.getAttribute('name'));
+}
+
+// ================================================================
+// COMPARE ENGINE
+// ================================================================
+function activeSlots() { return [1, 2, 3].filter(n => TMPL[n]); }
+function tname(n)      { return document.getElementById('name-' + n).value.trim() || 'Template ' + n; }
+
+async function runCompare() {
+  const slots = activeSlots();
+  if (slots.length < 2) return;
+
+  showProg(true); setP(5, 'Scanning static parameters...');
+  ROWS = [];
+
+  // Static parameters
+  for (const p of PARAMS) {
+    const vals = {};
+    slots.forEach(n => { vals[n] = getVal(TMPL[n].doc, p.paths); });
+    const row = buildRow(p.section, p.label, vals, slots);
+    if (row) ROWS.push(row);
+  }
+
+  setP(55, 'Scanning named entries (interfaces, zones, VPN...)');
+  await sleep(20);
+
+  // Dynamic named entries
+  for (const dl of DYNAMIC_LISTS) {
+    const allNames = new Set();
+    slots.forEach(n => getNamedList(TMPL[n].doc, dl.basePath).forEach(x => allNames.add(x)));
+    for (const nm of allNames) {
+      const vals = {};
+      slots.forEach(n => { vals[n] = getNamedList(TMPL[n].doc, dl.basePath).includes(nm) ? nm : null; });
+      const row = buildRow(dl.section, dl.label + ': ' + nm, vals, slots);
+      if (row) ROWS.push(row);
+    }
+  }
+
+  setP(90, 'Rendering...'); await sleep(20);
+  renderAll(slots);
+  setP(100, 'Done'); await sleep(200); showProg(false);
+  toast(ROWS.length + ' parameters compared across ' + slots.length + ' templates', 'ok');
+}
+
+function buildRow(section, label, vals, slots) {
+  const present = slots.filter(n => vals[n] !== null);
+  let status;
+  if (!present.length) {
+    status = 'NAA';
+  } else if (present.length === 1) {
+    status = 'T' + present[0] + 'O';
+  } else {
+    const first = vals[present[0]].trim();
+    status = present.every(n => vals[n] !== null && vals[n].trim() === first) ? 'DUP' : 'DIF';
+  }
+  return { section, label, vals, status, slots };
+}
+
+function makeAction(row, names) {
+  const { status, vals, slots } = row;
+  const present = slots.filter(n => vals[n] !== null);
+  if (status === 'NAA') return 'Not configured in any template.';
+  if (status === 'DUP')
+    return 'Identical in all templates. Remove from lower-priority templates — keep only in the highest-priority template in the stack.';
+  if (status === 'DIF')
+    return 'Values differ: ' + present.map(n => names[n] + '="' + vals[n] + '"').join(', ') +
+      '. Higher-priority template wins in the stack. Verify correct value and remove from lower templates, or use a $variable.';
+  if (status === 'T1O') return 'Only in ' + names[1] + '. Verify scope — if universal keep in T1; if device-specific use a $variable.';
+  if (status === 'T2O') return 'Only in ' + names[2] + '. If this should apply globally, promote to ' + names[1] + '.';
+  if (status === 'T3O') return 'Only in ' + names[3] + '. If broader scope is needed, promote to ' + names[2] + ' or ' + names[1] + '.';
+  return '';
+}
+
+// ================================================================
+// RENDER
+// ================================================================
+function renderAll(slots) {
+  const has3  = slots.includes(3);
+  const names = {}; slots.forEach(n => names[n] = tname(n));
+
+  // Column headers
+  document.getElementById('hdr-t1').textContent = 'T1: ' + names[1];
+  document.getElementById('hdr-t2').textContent = 'T2: ' + names[2];
+  document.getElementById('hdr-t3').style.display = has3 ? '' : 'none';
+  if (has3) document.getElementById('hdr-t3').textContent = 'T3: ' + names[3];
+
+  // Filter chips
+  document.getElementById('chip-T1O').textContent = names[1] + ' Only';
+  document.getElementById('chip-T2O').textContent = names[2] + ' Only';
+  document.getElementById('chip-T3O').style.display = has3 ? '' : 'none';
+  if (has3) document.getElementById('chip-T3O').textContent = names[3] + ' Only';
+
+  // Stat cards
+  document.getElementById('stat-t3').style.display  = has3 ? '' : 'none';
+  document.getElementById('lbl-t1o').textContent = names[1] + ' only';
+  document.getElementById('lbl-t2o').textContent = names[2] + ' only';
+  if (has3) document.getElementById('lbl-t3o').textContent = names[3] + ' only';
+  document.getElementById('sn-tot').textContent = ROWS.length;
+  document.getElementById('sn-dup').textContent = ROWS.filter(r => r.status === 'DUP').length;
+  document.getElementById('sn-dif').textContent = ROWS.filter(r => r.status === 'DIF').length;
+  document.getElementById('sn-t1o').textContent = ROWS.filter(r => r.status === 'T1O').length;
+  document.getElementById('sn-t2o').textContent = ROWS.filter(r => r.status === 'T2O').length;
+  if (has3) document.getElementById('sn-t3o').textContent = ROWS.filter(r => r.status === 'T3O').length;
+  document.getElementById('sn-naa').textContent = ROWS.filter(r => r.status === 'NAA').length;
+
+  // Table rows
+  const tbody  = document.getElementById('main-tbody');
+  tbody.innerHTML = '';
+  let lastSec = '';
+  const colspan = 4 + (has3 ? 1 : 0) + 1; // sec+par+T1+T2+[T3]+status+action = 6 or 7
+
+  ROWS.forEach(row => {
+    // Section divider
+    if (row.section !== lastSec) {
+      lastSec = row.section;
+      const hr = document.createElement('tr');
+      hr.className = 'sec-hdr';
+      hr.dataset.sec = row.section;
+      hr.innerHTML = '<td colspan="' + colspan + '">' + esc(row.section) + '</td>';
+      tbody.appendChild(hr);
+    }
+
+    const tr = document.createElement('tr');
+    const rCls = { DUP:'r-dup', DIF:'r-dif', T1O:'r-t1', T2O:'r-t2', T3O:'r-t3', NAA:'r-naa' }[row.status] || '';
+    tr.className = rCls;
+    tr.dataset.st  = row.status;
+    tr.dataset.txt = (row.section + '|' + row.label + '|' + slots.map(n => row.vals[n] || '').join('|')).toLowerCase();
+
+    const isDif  = row.status === 'DIF';
+    const isSame = row.status === 'DUP';
+    const isNAA  = row.status === 'NAA';
+    const vcls = v => v ? (isDif ? 'td-val vd' : isSame ? 'td-val vs' : 'td-val') : (isNAA ? 'td-val naa' : 'td-val miss');
+    const vt   = v => v ? esc(v) : (isNAA ? '<span class="na-badge">NA</span>' : '&mdash;');
+
+    let html =
+      '<td class="td-sec">'  + esc(row.section) + '</td>' +
+      '<td class="td-par">'  + esc(row.label)   + '</td>' +
+      '<td class="' + vcls(row.vals[1]) + '">' + vt(row.vals[1]) + '</td>' +
+      '<td class="' + vcls(row.vals[2]) + '">' + vt(row.vals[2]) + '</td>';
+    if (has3) html += '<td class="' + vcls(row.vals[3]) + '">' + vt(row.vals[3]) + '</td>';
+    html += '<td style="text-align:center">'  + makePill(row.status, names) + '</td>';
+    html += '<td class="td-act">' + esc(makeAction(row, names)) + '</td>';
+    tr.innerHTML = html;
+    tbody.appendChild(tr);
+  });
+
+  // Show panels
+  document.getElementById('stats-row').style.display  = 'flex';
+  document.getElementById('filter-bar').style.display = 'flex';
+  document.getElementById('tbl-wrap').style.display   = 'block';
+  document.getElementById('btn-csv').disabled  = false;
+  document.getElementById('btn-xl').disabled   = false;
+  setChip('ALL');
+}
+
+function makePill(status, names) {
+  const m = {
+    DUP: ['p-dup', '&#9888; Identical'],
+    DIF: ['p-dif', '&#10007; Different'],
+    T1O: ['p-t1',  (names[1]||'T1') + ' Only'],
+    T2O: ['p-t2',  (names[2]||'T2') + ' Only'],
+    T3O: ['p-t3',  (names[3]||'T3') + ' Only'],
+    NAA: ['p-naa', '— Not Set'],
+  };
+  const [cls, lbl] = m[status] || ['', ''];
+  return '<span class="pill ' + cls + '">' + lbl + '</span>';
+}
+
+// ================================================================
+// FILTER
+// ================================================================
+function setChip(s) {
+  CHIP = s;
+  const cls = { ALL:'on-all', DUP:'on-dup', DIF:'on-dif', T1O:'on-t1', T2O:'on-t2', T3O:'on-t3', NAA:'on-naa' };
+  ['ALL','DUP','DIF','T1O','T2O','T3O','NAA'].forEach(k => {
+    const el = document.getElementById('chip-' + k);
+    if (!el) return;
+    el.className = 'chip' + (k === s ? ' ' + cls[k] : '');
+  });
+  applyFilter();
+}
+
+function applyFilter() {
+  const q    = (document.getElementById('search').value || '').toLowerCase();
+  const rows = document.querySelectorAll('#main-tbody tr:not(.sec-hdr)');
+  const hdrs = document.querySelectorAll('#main-tbody tr.sec-hdr');
+  let visible = 0;
+  const visSec = new Set();
+
+  rows.forEach(tr => {
+    const ms   = CHIP === 'ALL' || tr.dataset.st === CHIP;
+    const mt   = !q || (tr.dataset.txt || '').includes(q);
+    const show = ms && mt;
+    tr.style.display = show ? '' : 'none';
+    if (show) { visible++; visSec.add(tr.querySelector('.td-sec')?.textContent); }
+  });
+  hdrs.forEach(hr => { hr.style.display = visSec.has(hr.dataset.sec) ? '' : 'none'; });
+  document.getElementById('row-count').textContent = visible + ' rows';
+  document.getElementById('empty-st').style.display = visible ? 'none' : 'block';
+}
+
+// ================================================================
+// CSV EXPORT  — guaranteed to open correctly in Excel
+// ================================================================
+function exportCSV() {
+  if (!ROWS.length) return;
+  const slots = activeSlots();
+  const names = {}; slots.forEach(n => names[n] = tname(n));
+
+  const stLbl = r => ({ DUP:'Identical', DIF:'Different',
+    T1O: names[1]+' Only', T2O: names[2]+' Only', T3O: (names[3]||'T3')+' Only' })[r.status] || r.status;
+
+  // RFC 4180 cell quoting
+  const cc = v => {
+    const s = String(v ?? '').replace(/\r\n|\n|\r/g, ' ');
+    return (s.includes(',') || s.includes('"')) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+
+  const hdr  = ['Config Section', 'Parameter', ...slots.map(n => names[n]), 'Status', 'Action Required'];
+  const lines = [hdr.map(cc).join(',')];
+  ROWS.forEach(row => {
+    lines.push([row.section, row.label,
+      ...slots.map(n => row.vals[n] ?? ''),
+      stLbl(row), makeAction(row, names)
+    ].map(cc).join(','));
+  });
+
+  // UTF-8 BOM so Excel opens with correct encoding
+  const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  doDownload(blob, buildFilename(names, slots) + '.csv');
+  toast('CSV downloaded — opens correctly in Excel', 'ok');
+}
+
+// ================================================================
+// XLSX EXPORT  — completely rewritten, fixed ZIP/SST ordering
+// ================================================================
+function exportXLSX() {
+  if (!ROWS.length) return;
+  const slots = activeSlots();
+  const names = {}; slots.forEach(n => names[n] = tname(n));
+  try {
+    const blob = buildXLSX(slots, names);
+    doDownload(blob, buildFilename(names, slots) + '.xlsx');
+    toast('Excel file downloaded!', 'ok');
+  } catch(e) {
+    console.error('XLSX build error:', e);
+    toast('Excel build failed — downloading CSV instead', 'err');
+    exportCSV();
+  }
+}
+
+function buildFilename(names, slots) {
+  return 'Template_Compare_' +
+    slots.map(n => (names[n]||'T'+n).replace(/[^a-zA-Z0-9_-]/g,'_').substring(0,20)).join('_vs_');
+}
+
+function buildXLSX(slots, names) {
+  const stLbl = r => ({ DUP:'Identical', DIF:'Different',
+    T1O: names[1]+' Only', T2O: names[2]+' Only', T3O: (names[3]||'T3')+' Only' })[r.status] || r.status;
+
+  const hdr    = ['Config Section', 'Parameter', ...slots.map(n => names[n]), 'Status', 'Action Required'];
+  const mkRows = fn => [hdr, ...ROWS.filter(fn).map(r =>
+    [r.section, r.label, ...slots.map(n => r.vals[n] ?? ''), stLbl(r), makeAction(r, names)])];
+
+  const sheets = [
+    { name: 'Summary', data: [
+      ['Panorama Template Comparison Report'],
+      ['Generated', new Date().toLocaleString()],
+      [],
+      ['Templates Compared'],
+      ...slots.map(n => ['Template ' + n, names[n]]),
+      [],
+      ['Metric', 'Count', 'Description'],
+      ['Total Parameters',    ROWS.length,                               'All unique parameters found across templates'],
+      ['Identical (Duplicate)', ROWS.filter(r=>r.status==='DUP').length, 'Same value in all templates — remove from lower templates'],
+      ['Different (Conflict)', ROWS.filter(r=>r.status==='DIF').length,  'Same param, different values — higher-priority template wins'],
+      ...slots.map(n => [(names[n]||'T'+n)+' Only',
+        ROWS.filter(r=>r.status==='T'+n+'O').length, 'Exists only in this template']),
+    ]},
+    { name: 'All Results', data: mkRows(() => true) },
+    { name: 'Duplicates',  data: mkRows(r => r.status === 'DUP') },
+    { name: 'Conflicts',   data: mkRows(r => r.status === 'DIF') },
+    ...slots.map(n => ({
+      name: (names[n]||'T'+n).substring(0, 25) + ' Only',
+      data: [
+        ['Config Section', 'Parameter', 'Value', 'Action'],
+        ...ROWS.filter(r => r.status === 'T'+n+'O')
+               .map(r => [r.section, r.label, r.vals[n] ?? '', makeAction(r, names)])
+      ]
+    }))
+  ];
+
+  return makeZippedXLSX(sheets);
+}
+
+// ================================================================
+// CORE XLSX / ZIP BUILDER   (pure JS — zero dependencies)
+//
+// The root cause of the previous corruption was that worksheet
+// XML was written BEFORE the Shared String Table (SST) was fully
+// built.  Cell <v> indices referenced strings that didn't exist
+// yet in the SST, producing invalid XLSX that Excel rejects.
+//
+// Fix: build ALL worksheet XML first (which populates the SST as
+// a side-effect), THEN generate the SST XML.  The order is now
+// guaranteed correct.
+// ================================================================
+function makeZippedXLSX(sheets) {
+  const te = new TextEncoder();
+
+  // XML-safe escape
+  function xe(s) {
+    return String(s ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  }
+
+  // Spreadsheet column letter (0-based index → A, B, ..., Z, AA, ...)
+  function colLtr(i) {
+    let s = ''; i++;
+    while (i > 0) { s = String.fromCharCode(64 + ((i-1) % 26 + 1)) + s; i = Math.floor((i-1) / 26); }
+    return s;
+  }
+
+  // ── Shared String Table ──────────────────────────────────────
+  // Worksheet XML is generated first; addSST() is called for each
+  // string cell — populating sst[].  After all worksheets are
+  // built, we generate sstXML from the now-complete sst[].
+  const sst = [], sstMap = new Map();
+  function addSST(v) {
+    const s = String(v ?? '');
+    if (sstMap.has(s)) return sstMap.get(s);
+    const i = sst.length; sst.push(s); sstMap.set(s, i); return i;
+  }
+
+  // ── Build one worksheet XML (side-effect: populates SST) ────
+  function buildWS(rows) {
+    let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+          + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+          + '<sheetData>';
+    rows.forEach((row, ri) => {
+      if (!Array.isArray(row) || !row.length) { x += '<row r="' + (ri+1) + '"/>'; return; }
+      const isHdr = (ri === 0);
+      x += '<row r="' + (ri+1) + '">';
+      row.forEach((cell, ci) => {
+        const addr = colLtr(ci) + (ri + 1);
+        const v    = String(cell ?? '');
+        const si   = isHdr ? 1 : 0;  // style 1 = bold header, style 0 = normal
+        if (!v) { x += '<c r="' + addr + '" s="' + si + '"/>'; return; }
+        const num = Number(v);
+        if (v.trim() && !isNaN(num) && isFinite(num) && !/^0\d/.test(v)) {
+          // Numeric — stored directly, no SST entry
+          x += '<c r="' + addr + '" t="n" s="' + si + '"><v>' + xe(v) + '</v></c>';
+        } else {
+          // String — reference into SST
+          x += '<c r="' + addr + '" t="s" s="' + si + '"><v>' + addSST(v) + '</v></c>';
+        }
+      });
+      x += '</row>';
+    });
+    x += '</sheetData></worksheet>';
+    return x;
+  }
+
+  // Build ALL worksheet XML first (this populates the SST completely)
+  const wsXMLs = sheets.map(sh => buildWS(sh.data));
+
+  // NOW generate SST XML — all strings are present
+  const sstXML =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    + ' count="' + sst.length + '" uniqueCount="' + sst.length + '">'
+    + sst.map(s => '<si><t xml:space="preserve">' + xe(s) + '</t></si>').join('')
+    + '</sst>';
+
+  // Minimal styles: index 0 = normal wrap, index 1 = bold header
+  const stylesXML =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+    + '<fonts count="2">'
+    + '<font><sz val="10"/><name val="Calibri"/></font>'
+    + '<font><b/><sz val="10"/><name val="Calibri"/></font>'
+    + '</fonts>'
+    + '<fills count="2">'
+    + '<fill><patternFill patternType="none"/></fill>'
+    + '<fill><patternFill patternType="gray125"/></fill>'
+    + '</fills>'
+    + '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
+    + '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
+    + '<cellXfs count="2">'
+    + '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0">'
+    +   '<alignment wrapText="1" vertical="top"/></xf>'
+    + '<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1">'
+    +   '<alignment wrapText="1" vertical="top"/></xf>'
+    + '</cellXfs>'
+    + '</styleSheet>';
+
+  const wbXML =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"'
+    + ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+    + '<sheets>'
+    + sheets.map((s,i) => '<sheet name="' + xe(s.name) + '" sheetId="' + (i+1) + '" r:id="rId' + (i+1) + '"/>').join('')
+    + '</sheets></workbook>';
+
+  const wbRels =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + sheets.map((_, i) =>
+        '<Relationship Id="rId' + (i+1) + '"'
+        + ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet"'
+        + ' Target="worksheets/sheet' + (i+1) + '.xml"/>').join('')
+    + '<Relationship Id="rId' + (sheets.length+1) + '"'
+    + ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles"'
+    + ' Target="styles.xml"/>'
+    + '<Relationship Id="rId' + (sheets.length+2) + '"'
+    + ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings"'
+    + ' Target="sharedStrings.xml"/>'
+    + '</Relationships>';
+
+  const rootRels =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+    + '<Relationship Id="rId1"'
+    + ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"'
+    + ' Target="xl/workbook.xml"/>'
+    + '</Relationships>';
+
+  let ct =
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+    + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+    + '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+    + '<Default Extension="xml"  ContentType="application/xml"/>'
+    + '<Override PartName="/xl/workbook.xml"'
+    + ' ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
+    + '<Override PartName="/xl/styles.xml"'
+    + ' ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'
+    + '<Override PartName="/xl/sharedStrings.xml"'
+    + ' ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml"/>';
+  sheets.forEach((_, i) => {
+    ct += '<Override PartName="/xl/worksheets/sheet' + (i+1) + '.xml"'
+        + ' ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+  });
+  ct += '</Types>';
+
+  // Assemble file map (order within the map is reflected in the ZIP)
+  const fm = {
+    '[Content_Types].xml':        ct,
+    '_rels/.rels':                rootRels,
+    'xl/workbook.xml':            wbXML,
+    'xl/_rels/workbook.xml.rels': wbRels,
+    'xl/styles.xml':              stylesXML,
+    'xl/sharedStrings.xml':       sstXML,
+  };
+  wsXMLs.forEach((xml, i) => { fm['xl/worksheets/sheet' + (i+1) + '.xml'] = xml; });
+
+  return buildZip(fm, te);
+}
+
+// ── ZIP builder (STORE — no compression; XLSX does not require it) ──
+function buildZip(fileMap, te) {
+  // CRC-32 lookup table
+  const crcT = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let j = 0; j < 8; j++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    crcT[i] = c;
+  }
+  function crc32(buf) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < buf.length; i++) c = crcT[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function u16(n) { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, n, true); return b; }
+  function u32(n) { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, n, true); return b; }
+  function cat(...a) {
+    const total = a.reduce((s, x) => s + x.length, 0);
+    const out   = new Uint8Array(total);
+    let off = 0; a.forEach(x => { out.set(x, off); off += x.length; });
+    return out;
+  }
+
+  const locals = [], cds = [];
+  let offset = 0;
+
+  for (const [name, content] of Object.entries(fileMap)) {
+    const nb  = te.encode(name);
+    const db  = te.encode(content);
+    const crc = crc32(db);
+    const sz  = db.length;
+
+    // Local file header
+    const lh = cat(
+      new Uint8Array([0x50,0x4B,0x03,0x04]),  // signature PK\x03\x04
+      u16(20),   // version needed to extract (2.0)
+      u16(0),    // general purpose bit flag
+      u16(0),    // compression method: STORE (0)
+      u16(0),    // last mod file time
+      u16(0),    // last mod file date
+      u32(crc),  // CRC-32
+      u32(sz),   // compressed size   (= uncompressed for STORE)
+      u32(sz),   // uncompressed size
+      u16(nb.length),  // file name length
+      u16(0),          // extra field length
+      nb, db           // file name + data
+    );
+
+    // Central directory entry
+    const cd = cat(
+      new Uint8Array([0x50,0x4B,0x01,0x02]),  // signature PK\x01\x02
+      u16(20),   // version made by
+      u16(20),   // version needed
+      u16(0),    // flag
+      u16(0),    // compression: STORE
+      u16(0),    // mod time
+      u16(0),    // mod date
+      u32(crc),
+      u32(sz),   // compressed size
+      u32(sz),   // uncompressed size
+      u16(nb.length),
+      u16(0),    // extra
+      u16(0),    // comment
+      u16(0),    // disk number start
+      u16(0),    // internal attrs
+      u32(0),    // external attrs
+      u32(offset),
+      nb
+    );
+
+    locals.push(lh);
+    cds.push(cd);
+    offset += lh.length;
+  }
+
+  const cdData = cat(...cds);
+  const eocd   = cat(
+    new Uint8Array([0x50,0x4B,0x05,0x06]),  // end-of-central-dir signature
+    u16(0),   // disk number
+    u16(0),   // disk with start of central directory
+    u16(cds.length),   // entries on this disk
+    u16(cds.length),   // total entries
+    u32(cdData.length),
+    u32(offset),
+    u16(0)    // comment length
+  );
+
+  return new Blob(
+    [cat(...locals, cdData, eocd)],
+    { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }
+  );
+}
+
+// ================================================================
+// UTILITIES
+// ================================================================
+function doDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a   = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+function esc(s)     { return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function readFile(f){ return new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsText(f,'UTF-8');}); }
+function sleep(ms)  { return new Promise(r => setTimeout(r, ms)); }
+function showProg(v){ document.getElementById('prog').style.display = v ? 'block' : 'none'; }
+function setP(p, l) { document.getElementById('prog-fill').style.width=p+'%'; document.getElementById('prog-lbl').textContent=l; }
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + (type || 'inf');
+  clearTimeout(t._t); t._t = setTimeout(() => t.className = '', 3400);
+}
+function resetAll() {
+  [1,2,3].forEach(n => {
+    TMPL[n] = null;
+    document.getElementById('file-' + n).value = '';
+    document.getElementById('info-' + n).innerHTML = '';
+    document.getElementById('dz-'   + n).className = 'drop-zone';
+    document.getElementById('clr-'  + n).classList.remove('show');
+    document.getElementById('name-' + n).value = '';
+  });
+  document.getElementById('card-3').classList.remove('loaded');
+  ROWS = []; CHIP = 'ALL';
+  ['btn-run','btn-csv','btn-xl'].forEach(id => document.getElementById(id).disabled = true);
+  ['stats-row','filter-bar','tbl-wrap'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('status-txt').textContent = '';
+  document.getElementById('main-tbody').innerHTML   = '';
+  showProg(false);
+}
+</script>
+</body>
+</html>
